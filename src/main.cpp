@@ -5,11 +5,13 @@ int myFunction(int, int);
 
 void setup() {
   // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  Serial.println("Hello World");
+  delay(1000); // wait for a second
 }
 
 // put function definitions here:
