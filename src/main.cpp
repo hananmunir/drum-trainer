@@ -60,7 +60,7 @@ int currentLevelIndex = 0;
 
 // Sensitivity
 const int THRESHOLD = 100;
-const int debounceDelay = 80;
+const int debounceDelay = 50;
 
 void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length) {
   if (type == WStype_TEXT) {
@@ -70,6 +70,17 @@ void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t l
     DeserializationError err = deserializeJson(doc, payload);
 
     if (!err) {
+
+
+      if (doc.containsKey("command")) {
+        String command = doc["command"];
+        if (command == "endSession") {
+          Serial.println("Received endSession command from frontend.");
+          endSession(); // Call your existing endSession function
+          return;
+        }
+      }
+
       //print doc
       bpm = doc["bpm"] | bpm;
       String rhythmStr = doc["rhythm"] | selectedLevel.name;
@@ -217,7 +228,7 @@ void handleBeatCue(unsigned long now) {
 
 void detectTaps() {
   int kick = analogRead(PIEZO_KICK_PIN);
-  int snare = analogRead(PIEZO_SNARE_PIN);
+  int snare = digitalRead(PIEZO_SNARE_PIN) == HIGH;
 
   if (kick > THRESHOLD && !kickTapped) {
     kickTapped = true;
@@ -229,15 +240,19 @@ void detectTaps() {
     delay(debounceDelay);
   }
 
-  // if (snare > THRESHOLD && !snareTapped) {
-  //   snareTapped = true;
-  //   webSocket.broadcastTXT("snare");
-  //   if (cueActive) {
-  //     hitCount++;
-  //     webSocket.broadcastTXT("hit");
-  //   }
-  //   delay(debounceDelay);
-  // }
+  printf(" Snare: %d\n", snare); // Debugging output
+
+  
+  if (snare  && !snareTapped) {
+    snareTapped = true;
+    webSocket.broadcastTXT("snare");
+    if (cueActive) {
+      hitCount++;
+      webSocket.broadcastTXT("hit");
+    }
+    delay(debounceDelay);
+  }
+
 }
 
 void setup() {
