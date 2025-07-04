@@ -6,7 +6,7 @@
 
 // -- Forward declarations --
 void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length);
-
+void endSession(void);
 
 // LEDs
 #define RED_LED D2
@@ -85,7 +85,19 @@ void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t l
       bpm = doc["bpm"] | bpm;
       String rhythmStr = doc["rhythm"] | selectedLevel.name;
       targetAccuracy = doc["accuracy"] | targetAccuracy;
+      String difficulty = doc["difficulty"] | "medium";
 
+      //log difficulty
+      Serial.println("Received difficulty: " + difficulty);
+      //set cue duration in relation to target accuracy
+      if(difficulty == "easy") {
+        cueDuration = 350;
+      } else if (difficulty == "medium") {
+        cueDuration = 300;
+      } else {
+        cueDuration = 250;
+      }
+      Serial.println("Cue duration set to: " + String(cueDuration) + "ms");
 
       bool found = false;
       for (int i = 0; i < sizeof(levels) / sizeof(levels[0]); i++) {
@@ -105,12 +117,7 @@ void handleWebSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t l
       
 
 
-      Serial.println("✅ Parsed WebSocket config:");
-      Serial.print("BPM: "); Serial.println(bpm);
-      Serial.print("Rhythm: "); Serial.println(selectedLevel.name);
-      Serial.print("BeatsPerMeasure: "); Serial.println(selectedLevel.beatsPerMeasure);
-   
-      Serial.print("Target Accuracy: "); Serial.println(targetAccuracy);
+    
 
       beatInterval = 60000 / bpm;
 
@@ -240,7 +247,7 @@ void detectTaps() {
     delay(debounceDelay);
   }
 
-  printf(" Snare: %d\n", snare); // Debugging output
+
 
   
   if (snare  && !snareTapped) {
